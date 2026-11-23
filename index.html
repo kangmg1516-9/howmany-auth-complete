@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-E5u8HPBztgu9EPNBjn93bMFtCuSg65mbBDoohkUJ8bE='; style-src 'sha256-IysK0l1h/vou3qugZYWgwrFyVfCQoI22RUD6LvLcYZE='; connect-src 'none'; img-src data:; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow, noarchive">
+  <link rel="icon" href="data:,">
+  <title>이메일 인증 안내 · 하우매니</title>
+  <script id="callback-script">
+  (() => {
+    'use strict';
+    let status = 'neutral';
+    try {
+      const query = new URLSearchParams(window.location.search);
+      const fragment = new URLSearchParams(window.location.hash.slice(1));
+      const errorKeys = ['error', 'error_code', 'error_description'];
+      const authKeys = ['access_token', 'refresh_token', 'id_token', 'provider_token', 'provider_refresh_token', 'token', 'token_hash', 'code'];
+      if (errorKeys.some((key) => query.has(key) || fragment.has(key))) {
+        status = 'error';
+      } else if (authKeys.some((key) => query.has(key))) {
+        status = 'query';
+      } else if (fragment.has('access_token') && fragment.has('refresh_token')) {
+        status = 'complete';
+      }
+    } catch {
+      status = 'neutral';
+    }
+
+    // Do not read token values, keep sessions, or forward the callback. Replace this history entry only.
+    try {
+      window.history.replaceState(null, '', window.location.pathname);
+    } catch {
+      status = 'cleanup-error';
+      try {
+        // Same-origin clean path only; never carry over query, fragment, or redirect_to.
+        window.location.replace(window.location.pathname);
+      } catch { /* Show a safe instruction if navigation is also unavailable. */ }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const messages = {
+        complete: ['이메일 인증이 완료되었습니다.', '하우매니 앱으로 돌아가 로그인해 주세요.'],
+        neutral: ['이메일 인증 안내', '인증 메일의 링크를 이용한 뒤 하우매니 앱으로 돌아가 로그인해 주세요.'],
+        query: ['앱에서 인증 상태를 확인해 주세요.', '하우매니 앱으로 돌아가 로그인해 주세요.'],
+        error: ['이메일 인증을 확인하지 못했어요.', '인증 링크가 만료되었거나 이미 사용되었을 수 있습니다. 앱에서 인증 상태를 확인해 주세요.'],
+        'cleanup-error': ['앱으로 돌아가 주세요.', '이 탭의 주소를 복사하거나 공유하지 말고, 탭을 닫은 뒤 하우매니 앱에서 로그인해 주세요.'],
+      };
+      const [heading, message] = messages[status];
+      document.getElementById('heading').textContent = heading;
+      document.getElementById('message').textContent = message;
+      document.getElementById('status-mark').textContent = status === 'complete' ? '✓' : 'i';
+      document.title = `${heading} · 하우매니`;
+    }, { once: true });
+  })();
+  </script>
+  <style id="page-style">
+    :root { color-scheme: light; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Malgun Gothic", sans-serif; color: #15213b; background: #f5f7fc; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; min-height: 100svh; display: grid; place-items: center; padding: 24px 18px; }
+    main { width: 100%; max-width: 480px; background: #fff; border: 1px solid #e5eaf4; border-radius: 24px; padding: 36px 28px; }
+    .brand { margin: 0 0 32px; color: #1946bf; font-size: 1rem; font-weight: 800; }
+    .mark { width: 48px; height: 48px; display: grid; place-items: center; border-radius: 16px; color: #1946bf; background: #e8eeff; font-size: 1.75rem; font-weight: 700; }
+    h1 { margin: 22px 0 14px; font-size: clamp(1.5rem, 5vw, 1.875rem); letter-spacing: -.035em; line-height: 1.5; overflow-wrap: anywhere; }
+    .message { margin: 0; font-size: 1rem; color: #344a75; line-height: 1.9; word-break: keep-all; overflow-wrap: anywhere; }
+    .next { margin-top: 28px; padding: 18px; border-radius: 14px; background: #f5f7fc; }
+    .next p { margin: 0; color: #344a75; font-size: 1rem; line-height: 1.8; }
+    .next p + p { margin-top: 6px; }
+    .note { margin: 24px 0 0; border-top: 1px solid #e5eaf4; padding-top: 18px; color: #526582; font-size: .875rem; line-height: 1.8; }
+    noscript p { color: #344a75; font-size: 1rem; line-height: 1.8; }
+    @media (max-width: 360px) { main { padding: 28px 20px; } }
+  </style>
+</head>
+<body>
+  <main>
+    <p class="brand">하우매니 · HowMany</p>
+    <div id="status-mark" class="mark" aria-hidden="true">i</div>
+    <section aria-live="polite" aria-atomic="true">
+      <h1 id="heading">이메일 인증 안내</h1>
+      <p id="message" class="message">하우매니 앱으로 돌아가 로그인해 주세요.</p>
+    </section>
+    <div class="next">
+      <p>하우매니 앱을 열어 주세요.</p>
+      <p>MY에서 이메일과 비밀번호로 로그인하세요.</p>
+    </div>
+    <p class="note">이 페이지는 안내용이며 인증 상태를 직접 검증하지 않습니다. 실제 인증 완료 여부는 앱 로그인으로 확인해 주세요.</p>
+    <noscript><p>주소 정리를 위해 JavaScript가 필요합니다. 이 탭의 전체 주소를 공유하지 말고 탭을 닫은 뒤 앱에서 로그인해 주세요.</p></noscript>
+  </main>
+</body>
+</html>
